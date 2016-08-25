@@ -1,3 +1,12 @@
 <resources>
     <string name="app_name">Sunny Player</string>
+    <string name="play">Play</string>
+    <string name="stop">Stop</string>
+    <string name="replay">Replay</string>
+    <string name="exit">Exit</string>
+    <string name="quick"><![CDATA[5s >>]]></string>
+    <string name="back"><![CDATA[<< 5s]]></string>
+    <string name="refresh_list">Refresh List</string>
+    <string name="media_name">Name</string>
+    <string name="media_author">Author</string>
 </resources>
