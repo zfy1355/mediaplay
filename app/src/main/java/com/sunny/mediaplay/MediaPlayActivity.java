@@ -4,6 +4,8 @@ import android.content.DialogInterface;
 import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.Message;
+import android.os.PersistableBundle;
 import android.os.PowerManager;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
@@ -12,6 +14,8 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.ListView;
+import android.widget.ProgressBar;
+import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -23,6 +27,8 @@ import java.io.FileFilter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Handler;
+import java.util.logging.LogRecord;
 
 /**
  * Created by home on 2016/8/24.
@@ -40,7 +46,13 @@ public class MediaPlayActivity extends AppCompatActivity implements View.OnClick
     private SongListAdapter adapter;
     private List<Song> data = new ArrayList<Song>();
     private  MediaPlayer mediaPlayer ;
+    private SeekBar mProgressBar;
     private final int JUMP_MILS = 5000;
+
+    private boolean isPlaying =false;
+    private boolean isInitProgressBar;
+
+    private int progressInstance;
 
 
     @Override
@@ -58,6 +70,7 @@ public class MediaPlayActivity extends AppCompatActivity implements View.OnClick
         b_refresh = (Button)findViewById(R.id.media_refresh);
         b_quick = (Button)findViewById(R.id.media_quick);
         b_back = (Button)findViewById(R.id.media_back);
+        mProgressBar = (SeekBar)findViewById(R.id.progressBar);
         b_replay.setOnClickListener(this);
         b_finish.setOnClickListener(this);
         b_play.setOnClickListener(this);
@@ -70,11 +83,25 @@ public class MediaPlayActivity extends AppCompatActivity implements View.OnClick
         adapter = new SongListAdapter(this,data);
         song_list.setAdapter(adapter);
         song_list.setOnItemClickListener(this);
+        mProgressBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+                mediaPlayer.seekTo(seekBar.getProgress()*1000);
+            }
+        });
 
         initTable(false);
     }
-
-
 
 
     @Override
@@ -143,6 +170,32 @@ public class MediaPlayActivity extends AppCompatActivity implements View.OnClick
                 exit();
                 break;
         }
+        refreshProgressBar();
+    }
+
+    public void refreshProgressBar(){
+
+        if(isPlaying) {
+            int length = mediaPlayer.getDuration();
+            mProgressBar.setMax(length / 1000);
+            if(!isInitProgressBar)
+                new Thread(new ProcessBarRefresh()).start();
+            isInitProgressBar = true;
+        }
+    }
+    class ProcessBarRefresh implements Runnable{
+         @Override
+         public void run() {
+            while(isPlaying){
+                Log.i(Tag,mediaPlayer.getCurrentPosition()/1000 +"");
+                mProgressBar.setProgress(mediaPlayer.getCurrentPosition()/1000);
+                try {
+                    Thread.sleep(1000);
+                } catch (InterruptedException e) {
+                }
+            }
+         }
+
     }
 
     private void getLocalSong(final List<Song> list, File file) {
@@ -210,11 +263,13 @@ public class MediaPlayActivity extends AppCompatActivity implements View.OnClick
 
     private void initTable(boolean isPlay){
         if(isPlay){
+            isPlaying = true;
             b_play.setEnabled(false);
             b_stop.setEnabled(true);
             b_quick.setEnabled(true);
             b_back.setEnabled(true);
         }else{
+            isPlaying = false;
             b_quick.setEnabled(false);
             b_back.setEnabled(false);
             b_stop.setEnabled(false);
