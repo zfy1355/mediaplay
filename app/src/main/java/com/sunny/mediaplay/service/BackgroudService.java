@@ -1,4 +1,4 @@
-package com.sunny.mediaplay;
+package com.sunny.mediaplay.service;
 
 import android.app.Notification;
 import android.app.PendingIntent;
